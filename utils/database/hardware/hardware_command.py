@@ -1,5 +1,4 @@
-from operator import itemgetter
-from typing import Dict, List
+from typing import List
 from models.hardware_command_model import HardwareCommandModel
 from utils.database.base.database_base import DatabaseBase
 from pymongo import collection

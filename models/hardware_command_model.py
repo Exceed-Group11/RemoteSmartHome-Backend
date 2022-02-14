@@ -1,5 +1,5 @@
 from multiprocessing.sharedctypes import Value
-from typing import Dict, Optional
+from typing import Optional
 
 from models.base.base_model import ResponseModel
 
