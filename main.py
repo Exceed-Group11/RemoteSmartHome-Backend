@@ -10,21 +10,6 @@ app = FastAPI()
 origins = [
     "*"
 ]
-'''
-{
-  "remoteId": 1,
-  "remoteName": "Example"
-  "structure": {
-     "0": {
-         "type": 1,
-         "value": {
-            "0": "123143121",
-            "1": "123123121"
-         }
-      }
-  }
-}
-'''
 
 app.add_middleware(
     CORSMiddleware,
@@ -36,7 +21,7 @@ app.add_middleware(
 class Remote(BaseModel):
   remoteId: int
   remoteName: str
-  structure
+  structure: str
 
 # Init Database Connection
 client = MongoClient('mongodb://localhost', 27017)
