@@ -37,4 +37,5 @@ class HardwareCommand(DatabaseBase):
             searchObject (Dict): The search object.
         """
         self.__collection.delete_one(searchObject)
+        self.logger.debug(f"Delete Command - {searchObject}")
         return
