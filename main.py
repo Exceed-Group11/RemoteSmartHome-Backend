@@ -25,18 +25,26 @@ remote_collection = db["Remote"]
 
 
 # Main APIs
-@app.delete("/{{api_host}}/remote/{remote_id}}/")
-def delete_remote(remote_id: int):
-    query_remoteID = {
-      "remoteID": remote_id
-      }
-    query_result = remote_collection.find(query_remoteID, {"_id": 0})
-    remote_list = list(query_result)
-    if len(list_query_toilet) != 1:
-        raise HTTPException(400, {
-            "message": "The remote id was not found or there were 2 or more remotes found."
-        })
-    remote_collection.delete_one(query_remoteID)
+@app.post("{api_host}/remote/{user_id}/{remote_id}/generate/")
+def generate_remote(remote_id: int, user_id: int, remote_type: int):
+    query = remote_collection.find({"_id": 0, "userId": user_id})
+    list_remote = list(query)
+    #no remote found
+    if len(list_remote) == 0:
+        user_remote={
+            "remoteId": remote_id,
+            "userId": user_id,
+            "structure": {
+                "0": {
+                    "type": remote_type,
+                    "status": False
+                }
+            }
+        }
+    else:
+        
+
+
     return {
         "message": f"Remote {remote_id} deleted"
     }
