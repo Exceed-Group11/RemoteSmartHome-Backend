@@ -132,10 +132,10 @@ def register(username:str,password:str,sessionID:str):
     hash_password = hahslib.pbkdf2_hmac('sha256',password('utf-8'),salt,100000)
     user_id {
         "username": username ,
-        "password": hash_password  ,
+        "password": hash_password ,
         "sessionID": sessionID 
             }
-    user_collection.insert(user_id)
+    user_collection.insert_one(user_id)
     return {
             "message": "success"
             }
