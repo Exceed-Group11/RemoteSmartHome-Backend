@@ -6,9 +6,9 @@ from pymongo.collection import Collection
 
 class HardwareCommand(DatabaseBase):
 
-    def __init__(self, db, hardware_collection_name="HardwareCommands"):
-        super().__init__(db)
-        self.__collection: Collection = self.db[hardware_collection_name]
+    def __init__(self, db, logger, hardware_collection_name="HardwareCommands"):
+        super().__init__(db, logger)
+        self.__collection: collection = self.db[hardware_collection_name]
 
     def get_command(self, searchObject: Dict) -> List[HardwareCommandModel]:
         """Get all commands in the database based on the inputted
@@ -22,6 +22,7 @@ class HardwareCommand(DatabaseBase):
         """
         result = self.__collection.find(searchObject, {"_id": 0})
         list_result = list(result)
+        self.logger.debug(f"Get Command Data - {list_result}")
         command_list = []
         # Convert everything to into the ResponseModel
         for item in list_result:

@@ -4,6 +4,7 @@ from pymongo import MongoClient
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException, Request, Header
 from typing import Optional
+import logging
 
 
 # Main App
@@ -22,24 +23,59 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Set the logging
+mainLogger = logging.getLogger("RemoteSmarthome")
+mainLogger.setLevel(logging.DEBUG)
+# create console handler and set level to debug
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+# create formatter
+formatter = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# add formatter to ch
+ch.setFormatter(formatter)
+# add ch to logger
+mainLogger.addHandler(ch)
+
 # Init Database Connection
 client = MongoClient('mongodb://localhost', 27017)
 db = client["SmartRemote"]
-remote_smarthome_database = RemoteSmartHomeDatabase()
+remote_smarthome_database = RemoteSmartHomeDatabase(mainLogger)
+
 
 # Main APIs
 
 
-@app.get("/")
-def main_api_age():
+@ app.get("/")
+def health_api():
     return {
         "message": "success"
     }
 
+# Frontend APIs
+
+
+@app.get("/remote/{remoteId}/structure/")
+def get_remote_structure(remoteId: str):
+    if remoteId == "all":
+        result = remote_smarthome_database.remote_structure.get_all_remote_structure()
+    else:
+        result = remote_smarthome_database.remote_structure.get_remote_structure_from_id(
+            remoteId)
+
+    # Verify result
+    if len(result) == 0:
+        raise HTTPException(404, {
+            "message": "No remote structure found"
+        })
+    elif len(result) == 1:
+        return result.pop()
+    return result
 
 # Hardware APIS
 
-@app.get("/hardware/commands/")
+
+@ app.get("/hardware/commands/")
 def get_commands_api(request: Request, authorization: Optional[str] = Header(None)):
     """This API is for the hardware to get the command
     to be transmited.
