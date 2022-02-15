@@ -1,10 +1,10 @@
 from multiprocessing.sharedctypes import Value
 from typing import Optional
 
-from models.base.base_model import ResponseModel
+from models.base.base_model import DataModel
 
 
-class HardwareCommandModel(ResponseModel):
+class HardwareCommandModel(DataModel):
     def __init__(self, command_id: str, value: Optional[int], hardware_id: Optional[str]):
 
         self.__command_id = command_id
