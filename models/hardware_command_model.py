@@ -16,6 +16,14 @@ class HardwareCommandModel(ResponseModel):
         return self.__command_id
 
     @property
+    def hardware_id(self):
+        return self.__hardware_id
+
+    @property
+    def value(self):
+        return self.__value
+
+    @property
     def value(self):
         return self.__value
 
