@@ -27,24 +27,17 @@ remote_collection = db["Remote"]
 # Main APIs
 @app.post("{api_host}/remote/{user_id}/{remote_id}/generate/")
 def generate_remote(remote_id: int, user_id: int, remote_type: int):
-    query = remote_collection.find({"_id": 0, "userId": user_id})
-    list_remote = list(query)
-    #no remote found
-    if len(list_remote) == 0:
-        user_remote={
-            "remoteId": remote_id,
-            "userId": user_id,
-            "structure": {
-                "0": {
-                    "type": remote_type,
-                    "status": False
-                }
+    user_remote={
+        "remoteId": remote_id,
+        "userId": user_id,
+        "structure": {
+            "0": {
+                "type": remote_type,
+                "status": False
             }
         }
-    else:
-        
-
-
+    }
+    remote_collection.insert_one(user_remote)
     return {
-        "message": f"Remote {remote_id} deleted"
+        "message": f"Remote {remote_id} generated"
     }
