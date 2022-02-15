@@ -1,14 +1,13 @@
-from abc import ABC, abstractclassmethod
+from abc import ABC, abstractstaticmethod, abstractmethod
 from typing import Dict
 
 
-class ResponseModel(ABC):
+class DataModel(ABC):
 
-    @abstractclassmethod
+    @abstractmethod
     def to_dict(self) -> Dict:
         pass
 
-    @staticmethod
-    @abstractclassmethod
+    @abstractstaticmethod
     def from_dict(dict_data: Dict):
         pass
