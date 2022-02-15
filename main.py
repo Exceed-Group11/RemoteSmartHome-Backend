@@ -26,9 +26,10 @@ remote_collection = db["Remote"]
 
 # Main APIs
 @app.delete("/{api_host}/remote/{remote_id}}/")
-def delete_remote(remote_id: int):
-    query_remoteID = {
-      "remoteID": remote_id
+def delete_remote(remote_id: int, user_id: int):
+    query = {
+      "remoteId": remote_id,
+      "userId": user_id
       }
     query_result = remote_collection.find(query_remoteID, {"_id": 0})
     remote_list = list(query_result)
