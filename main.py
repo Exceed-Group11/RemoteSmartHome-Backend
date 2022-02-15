@@ -5,7 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException, Request, Header
 from typing import Optional
 import logging
-
+import hashlib
+import os
 
 # Main App
 app = FastAPI()
@@ -41,7 +42,7 @@ mainLogger.addHandler(ch)
 client = MongoClient('mongodb://localhost', 27017)
 db = client["SmartRemote"]
 remote_smarthome_database = RemoteSmartHomeDatabase(mainLogger)
-
+user_collection = client["User"]
 
 # Main APIs
 
@@ -124,3 +125,17 @@ def send_ack_command_api(command_id: str, authorization: Optional[str] = Header(
     return {
         "message": "success"
     }
+
+@app.post("/user/register/")
+def register(username:str,password:str,sessionID:str):
+    salt = os.urandom(16)
+    hash_password = hahslib.pbkdf2_hmac('sha256',password('utf-8'),salt,100000)
+    user_id {
+        "username": username ,
+        "password": hash_password  ,
+        "sessionID": sessionID 
+            }
+    user_collection.insert(user_id)
+    return {
+            "message": "success"
+            }
