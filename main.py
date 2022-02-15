@@ -88,7 +88,8 @@ def get_commands_api(request: Request, authorization: Optional[str] = Header(Non
     except ValueError:
         raise HTTPException(401, "Unauthorized access.")
     # Get the command based on the inputted hardware_id
-    result = remote_smarthome_database.hardware.get_command(hardware_id)
+    result = remote_smarthome_database.hardware.get_command(
+        {"hardwareId": hardware_id})
 
     # Response 404 if the command was not found.
     if len(result) == 0:
@@ -97,3 +98,29 @@ def get_commands_api(request: Request, authorization: Optional[str] = Header(Non
         })
     # Reponse the command only 1 command
     return result[0].to_dict()
+
+
+@app.post("/hardware/command/{command_id}/ack/")
+def send_ack_command_api(command_id: str, authorization: Optional[str] = Header(None)):
+    # Decode the hardware id from request header
+    try:
+        hardware_id = header_decoder(authorization)
+    except ValueError:
+        raise HTTPException(401, "Unauthorized access.")
+    result = remote_smarthome_database.hardware.get_command(
+        {"commandId": command_id, "hardwareId": hardware_id})
+    if len(result) == 0:
+        raise HTTPException(400, {
+            "message": "No command found"
+        })
+    elif len(result) > 1:
+        raise HTTPException(500, {
+            "message": "We found two or more command sharing the same commandId. Please inform the backend team."
+        })
+
+    # Remove the command
+    remote_smarthome_database.hardware.delete_command(
+        {"commandId": command_id})
+    return {
+        "message": "success"
+    }
