@@ -8,7 +8,7 @@ class HardwareCommand(DatabaseBase):
 
     def __init__(self, db, logger, hardware_collection_name="HardwareCommands"):
         super().__init__(db, logger)
-        self.__collection: collection = self.db[hardware_collection_name]
+        self.__collection: Collection = self.db[hardware_collection_name]
 
     def get_command(self, searchObject: Dict) -> List[HardwareCommandModel]:
         """Get all commands in the database based on the inputted
