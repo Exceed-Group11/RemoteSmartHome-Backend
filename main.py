@@ -221,3 +221,11 @@ def send_ack_command_api(command_id: str, authorization: Optional[str] = Header(
     return {
         "message": "success"
     }
+
+@app.get("/remote/")
+def show_all_status():
+
+@app.post("/user/siginin/")
+def sign_in():
+    
+    return
