@@ -1,6 +1,0 @@
-from pydantic import Basemodel
-
-class RegisterUser(BaseModel):
-    username: str
-    password: str
-    hardwareID: str
