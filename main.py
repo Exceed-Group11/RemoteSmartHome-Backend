@@ -110,7 +110,7 @@ def send_remote_action_api(remoteId: str, buttonId: str, state: StateModel, auth
     if remote_user["structure"].get(buttonId, "") == "":
         raise HTTPException(
             404, f"The inputted buttonId ({buttonId}) is not found for the remote {remoteId}")
-        # Check if the state in the database is the same thing that use want to interact
+    # Check if the state in the database is the same thing that use want to interact
     if remote_user["structure"][buttonId]["state"] == state.state:
         raise HTTPException(
             400, f"The state of the button that you want to change is already {state.state}")
