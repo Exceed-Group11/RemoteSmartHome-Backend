@@ -45,8 +45,11 @@ mainLogger.addHandler(ch)
 # Init Database Connection
 client = MongoClient('mongodb://localhost', 27017)
 db = client["SmartRemote"]
+remote_collection = db["Remote"]
 remote_smarthome_database = RemoteSmartHomeDatabase(mainLogger)
 user_collection = db["Users"]
+user_session = db["UserSession"]
+
 
 # Main APIs
 
@@ -56,8 +59,60 @@ def health_api():
     return {
         "message": "success"
     }
-
 # Frontend APIs
+
+
+@app.post("/remote/{remote_id}/generate/")
+def generate_remote(remote_id: str, authorization: Optional[str] = Header(None)):
+    try:
+        auth_token = header_decoder(authorization)
+        user_result = remote_smarthome_database.user_session.get_session(
+            {"token": auth_token})
+        if len(user_result) != 1:
+            raise ValueError()
+    except ValueError:
+        raise HTTPException(401, "Unauthorized access.")
+    user_id = user_result[0]["userId"]
+    # Find if user already has this remote.
+    query_user_remote = {
+        "userId": user_id, "remoteId": remote_id}
+    user_remoteId = remote_collection.find(
+        query_user_remote, {"_id": 0})
+    list_user_remoteId = list(user_remoteId)
+    if len(list_user_remoteId) != 0:
+        raise HTTPException(400, f"This user already has Remote {remote_id}")
+
+    # Get Default Remote Structure
+    remote_structure = remote_smarthome_database.remote_structure.get_remote_structure_from_id(
+        remote_id)
+    list_remote_structure = list(remote_structure)
+    if len(list_remote_structure) == 0:
+        raise HTTPException(
+            400, f"No remote structure with remoteId: {remote_id}")
+
+    user_remote = list_remote_structure.pop()
+    # Remote the remoteName Key
+    del user_remote["remoteName"]
+    structure_item = {}
+    # Loop each button type
+    for key, item in user_remote["structure"].items():
+        if item["type"] == 1:
+            # OnOff switch button type
+            structure_item[key] = {
+                "state": False
+            }
+        else:
+            raise HTTPException(
+                500, "There was an error occurred while creating the remote. Contact backend team.")
+
+    user_remote["structure"] = structure_item
+    # Add userId field
+    user_remote["userId"] = user_id
+    # Insert remote into the remote collection
+    remote_collection.insert_one(user_remote)
+    return {
+        "message": "success"
+    }
 
 
 @app.get("/remote/{remoteId}/structure/")
