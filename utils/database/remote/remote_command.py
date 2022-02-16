@@ -16,4 +16,5 @@ class RemoteCommand(DatabaseBase):
 
     def update_remote(self, searchObj: Dict, updateObj: Dict) -> None:
         self.__collection.update_one(searchObj, updateObj)
+        self.logger.debug(f"Update Remote {searchObj} - {updateObj}")
         return
