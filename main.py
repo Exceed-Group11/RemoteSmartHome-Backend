@@ -1,3 +1,4 @@
+from models.register_model import RegisterModel
 from models.send_remote_action_model.state_model import StateModel
 from utils.database.remote_smart_home_database import RemoteSmartHomeDatabase
 from utils.header_decoder import header_decoder
@@ -6,10 +7,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException, Request, Header
 from typing import Optional
 import logging
+import hashlib
+import uuid
 import time
-
 from utils.random_generator import generate_random_str
-
 
 # Main App
 app = FastAPI()
@@ -45,8 +46,7 @@ mainLogger.addHandler(ch)
 client = MongoClient('mongodb://localhost', 27017)
 db = client["SmartRemote"]
 remote_smarthome_database = RemoteSmartHomeDatabase(mainLogger)
-
-user_active = db ["Aciver"]
+user_collection = db["Users"]
 
 # Main APIs
 
@@ -223,18 +223,25 @@ def send_ack_command_api(command_id: str, authorization: Optional[str] = Header(
         "message": "success"
     }
 
-@app.get("/remote/")
-def show_all_status():
 
-@app.post("/user/siginin/")
-def sign_in(user: Register):
-    find_user = user.collection.find({user.username})
-    salt = os.urandom(16)
-    hash_password = hahslib.pbkdf2_hmac('sha256',user.password('utf-8'),salt,100000)
-    if find_user.pasword == hash_password :
-        print("Login Success")
-        user_active.insesrt_one(user)
-    else:
-        print("Wrong Try again")
-    return  {}
-            
+@app.post("/user/register/")
+def register_user(register: RegisterModel):
+    salt = generate_random_str(16)
+    byte_salt = bytes(salt, "utf-8")
+    hash_password = hashlib.pbkdf2_hmac(
+        'sha256', register.password.encode('utf-8'), byte_salt, 100000
+    )
+    # Generate userID
+    user_id = uuid.uuid4()
+
+    user_object = {
+        "userId": str(user_id),
+        "username": register.username,
+        "password": hash_password.hex(),
+        "hardwareId": register.hardwareId,
+        "salt": salt
+    }
+    user_collection.insert_one(user_object)
+    return {
+        "message": "success"
+    }
