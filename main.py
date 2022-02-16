@@ -226,6 +226,13 @@ def send_ack_command_api(command_id: str, authorization: Optional[str] = Header(
 def show_all_status():
 
 @app.post("/user/siginin/")
-def sign_in():
-    
-    return
+def sign_in(user: Register):
+    find_user = user.collection.find({user.username})
+    salt = os.urandom(16)
+    hash_password = hahslib.pbkdf2_hmac('sha256',user.password('utf-8'),salt,100000)
+    if find_user.pasword == hash_password :
+        print("Login Success")
+    else:
+        print("Wrong Try again")
+    return  {}
+            
