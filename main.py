@@ -234,14 +234,15 @@ def send_ack_command_api(command_id: str, authorization: Optional[str] = Header(
 
 @app.post("/user/register/")
 def register_user(register: Register):
-    salt = os.urandom(16)
+    salt = generate_random_str(16)
+    byte_salt = bytes(salt, "utf-8")
     hash_password = hashlib.pbkdf2_hmac(
-        'sha256', register.password.encode('utf-8'), salt, 100000
+        'sha256', register.password.encode('utf-8'), byte_salt, 100000
     )
     user_id = {
         "userId": "",
         "username": register.username,
-        "password": hash_password,
+        "password": hash_password.hex(),
         "hardwareId": register.hardwareId,
         "salt": salt
     }
