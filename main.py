@@ -35,13 +35,13 @@ def generate_remote(remote_id: str, remote_id: str,authorization: Optional[str] 
     user_id = Usersession.find(query,{"_id": 0, "token": 0, "userId": 1})
     #find user remote 
     query_user_remote = {"userId": user_id}
-    user_remoteId = remote_collection.find(query_user_remote,{"_id": 0, "userId": 0, "remoteId":1 , "structure": 0})
+    user_remoteId = remote_collection.find(query_user_remote,{"_id": 0, "userId": 0, "remoteId": 1, "structure": 0})
     list_user_remoteId = list(user_remoteId)
     #if remote_id is found in remote_collection
     for user_remote_Id in list_user_remoteId:
         if user_remote_Id == remote_id:
             return{
-                "message": f"This user has Remote {remote_id} already "
+                "message": f"This user already has Remote {remote_id} "
             }
 
     user_remote={
