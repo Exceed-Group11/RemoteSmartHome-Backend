@@ -8,7 +8,7 @@ from fastapi import FastAPI, HTTPException, Request, Header
 from typing import Optional
 import logging
 import hashlib
-import os
+import uuid
 import time
 from utils.random_generator import generate_random_str
 
@@ -231,14 +231,17 @@ def register_user(register: RegisterModel):
     hash_password = hashlib.pbkdf2_hmac(
         'sha256', register.password.encode('utf-8'), byte_salt, 100000
     )
-    user_id = {
-        "userId": "",
+    # Generate userID
+    user_id = uuid.uuid4()
+
+    user_object = {
+        "userId": str(user_id),
         "username": register.username,
         "password": hash_password.hex(),
         "hardwareId": register.hardwareId,
         "salt": salt
     }
-    user_collection.insert_one(user_id)
+    user_collection.insert_one(user_object)
     return {
         "message": "success"
     }
