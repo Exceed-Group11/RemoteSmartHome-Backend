@@ -298,5 +298,5 @@ def register_user(register: RegisterModel):
     }
     user_collection.insert_one(user_object)
     return {
-        "message": f"Remote {remote_id} generated"
+        "message": "success"
     }
