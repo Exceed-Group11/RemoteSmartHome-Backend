@@ -33,19 +33,21 @@ def delete_remote(remote_id: str, authorization: Optional[str] = Header(None)):
         raise HTTPException(401, "Unauthorized access.")
 
     query_token = {"token": auth_token}
-    user_id = Usersession.find(query,{"_id": 0, "token": 0, "userId": 1})
-    
-    query = {
+    user_id = Usersession.find(query_token,{"_id": 0, "token": 0, "userId": 1})
+
+    query_user_remote = {
       "remoteId": remote_id,
       "userId": user_id
-      }
-    query_result = remote_collection.find(query_remoteID, {"_id": 0})
-    remote_list = list(query_result)
-    if len(list_query_toilet) != 1:
-        raise HTTPException(400, {
-            "message": "The remote id was not found or there were 2 or more remotes found."
-        })
-    remote_collection.delete_one(query_remoteID)
+    }
+    query_result = remote_collection.find(query_user_remote, {"_id": 0})
+    list_query_result = list(query_result)
+    #No remote_id in user_id
+    if len(list_query_result) == 0:
+        return {
+            "message": f"couldn't find Remote {remote_id} "
+        }
+
+    remote_collection.delete_one(query_result)
     return {
         "message": f"Remote {remote_id} deleted"
     }
