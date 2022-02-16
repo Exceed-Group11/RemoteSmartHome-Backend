@@ -25,7 +25,7 @@ remote_collection = db["Remote"]
 
 
 # Main APIs
-@app.delete("/remote/{remoteId}/")
+@app.delete("/remote/{remote_id}/")
 def delete_remote(remote_id: str, authorization: Optional[str] = Header(None)):
     try:
         auth_token = header_decoder(authorization)
