@@ -25,8 +25,16 @@ remote_collection = db["Remote"]
 
 
 # Main APIs
-@app.delete("/{api_host}/remote/{user_id}/{remote_id}}/")
-def delete_remote(remote_id: int, user_id: int):
+@app.delete("/remote/{remoteId}/")
+def delete_remote(remote_id: str, authorization: Optional[str] = Header(None)):
+    try:
+        auth_token = header_decoder(authorization)
+    except ValueError:
+        raise HTTPException(401, "Unauthorized access.")
+
+    query_token = {"token": auth_token}
+    user_id = Usersession.find(query,{"_id": 0, "token": 0, "userId": 1})
+    
     query = {
       "remoteId": remote_id,
       "userId": user_id
