@@ -39,3 +39,8 @@ class HardwareCommand(DatabaseBase):
         self.__collection.delete_one(searchObject)
         self.logger.debug(f"Delete Command - {searchObject}")
         return
+
+    def create_command(self, command: Dict) -> None:
+        self.__collection.insert_one(command)
+        self.logger.debug(f"Create command - {command}")
+        return
