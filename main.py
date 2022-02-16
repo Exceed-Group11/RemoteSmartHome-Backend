@@ -1,3 +1,4 @@
+from models.register_model import RegisterModel
 from models.send_remote_action_model.state_model import StateModel
 from utils.database.remote_smart_home_database import RemoteSmartHomeDatabase
 from utils.header_decoder import header_decoder
@@ -6,10 +7,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException, Request, Header
 from typing import Optional
 import logging
+import hashlib
+import uuid
 import time
-
 from utils.random_generator import generate_random_str
-
 
 # Main App
 app = FastAPI()
@@ -45,7 +46,7 @@ mainLogger.addHandler(ch)
 client = MongoClient('mongodb://localhost', 27017)
 db = client["SmartRemote"]
 remote_smarthome_database = RemoteSmartHomeDatabase(mainLogger)
-
+user_collection = db["Users"]
 
 # Main APIs
 
@@ -218,6 +219,29 @@ def send_ack_command_api(command_id: str, authorization: Optional[str] = Header(
     # Remove the command
     remote_smarthome_database.hardware.delete_command(
         {"commandId": command_id})
+    return {
+        "message": "success"
+    }
+
+
+@app.post("/user/register/")
+def register_user(register: RegisterModel):
+    salt = generate_random_str(16)
+    byte_salt = bytes(salt, "utf-8")
+    hash_password = hashlib.pbkdf2_hmac(
+        'sha256', register.password.encode('utf-8'), byte_salt, 100000
+    )
+    # Generate userID
+    user_id = uuid.uuid4()
+
+    user_object = {
+        "userId": str(user_id),
+        "username": register.username,
+        "password": hash_password.hex(),
+        "hardwareId": register.hardwareId,
+        "salt": salt
+    }
+    user_collection.insert_one(user_object)
     return {
         "message": "success"
     }
