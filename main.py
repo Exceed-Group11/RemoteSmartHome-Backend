@@ -118,7 +118,7 @@ def send_remote_action_api(remoteId: str, buttonId: str, state: StateModel, auth
     # Get Remote Structure
     remote_structure = remote_smarthome_database.remote_structure.get_remote_structure_from_id(
         remoteId)
-    if len(remote_result) != 1:
+    if len(remote_structure) != 1:
         raise HTTPException(
             404, "The remote structure is not found or found more than 1")
 
