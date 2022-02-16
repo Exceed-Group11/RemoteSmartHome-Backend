@@ -9,11 +9,14 @@ import hashlib
 import os
 
 # class usesr
-from pydantic import Basemodel
+from pydantic import BaseModel
+
+
 class Register(BaseModel):
     username: str
     password: str
-    hardwareID: str
+    hardwareId: str
+
 
 # Main App
 app = FastAPI()
@@ -49,7 +52,7 @@ mainLogger.addHandler(ch)
 client = MongoClient('mongodb://localhost', 27017)
 db = client["SmartRemote"]
 remote_smarthome_database = RemoteSmartHomeDatabase(mainLogger)
-user_collection = client["User"]
+user_collection = db["Users"]
 
 # Main APIs
 
@@ -133,16 +136,21 @@ def send_ack_command_api(command_id: str, authorization: Optional[str] = Header(
         "message": "success"
     }
 
+
 @app.post("/user/register/")
-def register_user(register:Register):
+def register_user(register: Register):
     salt = os.urandom(16)
-    hash_password = hahslib.pbkdf2_hmac('sha256',register.password('utf-8'),salt,100000)
-    user_id {
-        "username": register.username ,
-        "password": register.hash_password ,
-        "hardwareID": register.hardwareID 
-            }
+    hash_password = hashlib.pbkdf2_hmac(
+        'sha256', register.password.encode('utf-8'), salt, 100000
+    )
+    user_id = {
+        "userId": "",
+        "username": register.username,
+        "password": hash_password,
+        "hardwareId": register.hardwareId,
+        "salt": salt
+    }
     user_collection.insert_one(user_id)
     return {
-            "message": "success"
-            }
+        "message": "success"
+    }
