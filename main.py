@@ -95,7 +95,7 @@ def send_remote_action_api(remoteId: str, buttonId: str, state: StateModel, auth
     list_user = list(user)
     if len(list_user) != 1:
         raise HTTPException(
-            500, "The userId is not found, Please inform backend team.")
+            404, "The userId is not found")
     hardware_id = list_user[0]["hardwareId"]
 
     # Get Remote
@@ -103,13 +103,13 @@ def send_remote_action_api(remoteId: str, buttonId: str, state: StateModel, auth
         {"userId": user_id, "remoteId": remoteId})
     if len(remote_result) != 1:
         raise HTTPException(
-            400, "The remote is not found or found more than 1")
+            404, "The remote is not found or found more than 1")
     remote_user = remote_result[0]
 
     # Check if button is exists
     if remote_user["structure"].get(buttonId, "") == "":
         raise HTTPException(
-            400, f"The inputted buttonId ({buttonId}) is not found for the remote {remoteId}")
+            404, f"The inputted buttonId ({buttonId}) is not found for the remote {remoteId}")
         # Check if the state in the database is the same thing that use want to interact
     if remote_user["structure"][buttonId]["state"] == state.state:
         raise HTTPException(
@@ -120,7 +120,7 @@ def send_remote_action_api(remoteId: str, buttonId: str, state: StateModel, auth
         remoteId)
     if len(remote_result) != 1:
         raise HTTPException(
-            400, "The remote structure is not found or found more than 1")
+            404, "The remote structure is not found or found more than 1")
 
     # Generate the command_id
     command_id = generate_random_str(10)
@@ -172,7 +172,7 @@ def send_remote_action_api(remoteId: str, buttonId: str, state: StateModel, auth
 # Hardware APIS
 
 
-@ app.get("/hardware/commands/")
+@app.get("/hardware/commands/")
 def get_commands_api(request: Request, authorization: Optional[str] = Header(None)):
     """This API is for the hardware to get the command
     to be transmited.
@@ -197,7 +197,7 @@ def get_commands_api(request: Request, authorization: Optional[str] = Header(Non
     return result[0].to_dict()
 
 
-@ app.post("/hardware/command/{command_id}/ack/")
+@app.post("/hardware/command/{command_id}/ack/")
 def send_ack_command_api(command_id: str, authorization: Optional[str] = Header(None)):
     # Decode the hardware id from request header
     try:
