@@ -8,6 +8,13 @@ import logging
 import hashlib
 import os
 
+# class usesr
+from pydantic import Basemodel
+class Register(BaseModel):
+    username: str
+    password: str
+    hardwareID: str
+
 # Main App
 app = FastAPI()
 
@@ -127,13 +134,13 @@ def send_ack_command_api(command_id: str, authorization: Optional[str] = Header(
     }
 
 @app.post("/user/register/")
-def register(username:str,password:str,sessionID:str):
+def register_user(register:Register):
     salt = os.urandom(16)
-    hash_password = hahslib.pbkdf2_hmac('sha256',password('utf-8'),salt,100000)
+    hash_password = hahslib.pbkdf2_hmac('sha256',register.password('utf-8'),salt,100000)
     user_id {
-        "username": username ,
-        "password": hash_password ,
-        "sessionID": sessionID 
+        "username": register.username ,
+        "password": register.hash_password ,
+        "hardwareID": register.hardwareID 
             }
     user_collection.insert_one(user_id)
     return {
