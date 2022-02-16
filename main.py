@@ -118,13 +118,14 @@ def generate_remote(remote_id: str, authorization: Optional[str] = Header(None))
 def delete_remote(remote_id: str, authorization: Optional[str] = Header(None)):
     try:
         auth_token = header_decoder(authorization)
+        user_result = remote_smarthome_database.user_session.get_session(
+            {"token": auth_token})
+        if len(user_result) != 1:
+            raise ValueError()
     except ValueError:
         raise HTTPException(401, "Unauthorized access.")
 
-    query_token = {"token": auth_token}
-    user_id = Usersession.find(
-        query_token, {"_id": 0, "token": 0, "userId": 1})
-
+    user_id = user_result[0]["userId"]
     query_user_remote = {
         "remoteId": remote_id,
         "userId": user_id
@@ -133,11 +134,15 @@ def delete_remote(remote_id: str, authorization: Optional[str] = Header(None)):
     list_query_result = list(query_result)
     # No remote_id in user_id
     if len(list_query_result) == 0:
-        return {
+        raise HTTPException(404, {
             "message": f"couldn't find Remote {remote_id} "
-        }
+        })
 
-    remote_collection.delete_one(query_result)
+    remote_collection.delete_one(query_user_remote)
+    # Response success
+    return {
+        "message": "success"
+    }
 
 
 @app.get("/remote/{remoteId}/structure/")
