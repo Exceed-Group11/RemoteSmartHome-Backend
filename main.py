@@ -1,3 +1,4 @@
+from models.register_model import RegisterModel
 from models.send_remote_action_model.state_model import StateModel
 from utils.database.remote_smart_home_database import RemoteSmartHomeDatabase
 from utils.header_decoder import header_decoder
@@ -10,15 +11,6 @@ import hashlib
 import os
 import time
 from utils.random_generator import generate_random_str
-# class usesr
-from pydantic import BaseModel
-
-
-class Register(BaseModel):
-    username: str
-    password: str
-    hardwareId: str
-
 
 # Main App
 app = FastAPI()
@@ -233,7 +225,7 @@ def send_ack_command_api(command_id: str, authorization: Optional[str] = Header(
 
 
 @app.post("/user/register/")
-def register_user(register: Register):
+def register_user(register: RegisterModel):
     salt = generate_random_str(16)
     byte_salt = bytes(salt, "utf-8")
     hash_password = hashlib.pbkdf2_hmac(
