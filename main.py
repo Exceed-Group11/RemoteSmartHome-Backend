@@ -46,6 +46,7 @@ client = MongoClient('mongodb://localhost', 27017)
 db = client["SmartRemote"]
 remote_smarthome_database = RemoteSmartHomeDatabase(mainLogger)
 
+user_active = db ["Aciver"]
 
 # Main APIs
 
@@ -232,6 +233,7 @@ def sign_in(user: Register):
     hash_password = hahslib.pbkdf2_hmac('sha256',user.password('utf-8'),salt,100000)
     if find_user.pasword == hash_password :
         print("Login Success")
+        user_active.insesrt_one(user)
     else:
         print("Wrong Try again")
     return  {}
