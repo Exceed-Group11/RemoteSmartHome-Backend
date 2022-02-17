@@ -164,6 +164,31 @@ def get_remote_structure(remoteId: str):
     return result
 
 
+@app.get("/remote/{remoteId}/")
+def get_remote_status_1_by_1(remoteId: str, authorization: Optional[str] = Header(None)):
+    try:
+        auth_token = header_decoder(authorization)
+        user_result = remote_smarthome_database.user_session.get_session(
+            {"token": auth_token})
+        if len(user_result) != 1:
+            raise ValueError()
+    except ValueError:
+        raise HTTPException(401, "Unauthorized access.")
+    user_id = user_result[0]["userId"]
+    query_user_remote = {
+        "remoteId": remoteId,
+        "userId": user_id
+    }
+    query_result = remote_collection.find(query_user_remote, {"_id": 0})
+    list_query_result = list(query_result)
+    # No remote_id in user_id
+    if len(list_query_result) == 0:
+        raise HTTPException(404, {
+            "message": f"couldn't find Remote {remoteId}"
+        })
+    return list_query_result.pop()
+
+
 @app.post("/remote/{remoteId}/button/{buttonId}/")
 def send_remote_action_api(remoteId: str, buttonId: str, state: StateModel, authorization: Optional[str] = Header(None)):
     # Decode the authorization token from request header
