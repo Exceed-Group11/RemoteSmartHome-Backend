@@ -396,7 +396,8 @@ def get_user_api(authorization: Optional[str] = Header(None)):
             404, "No userId associated with this session or found more than 1.")
     user_obj = result.pop()
     return {
-        "hardwareId": user_obj.get("hardwareId", "UNKNOWN")
+        "hardwareId": user_obj.get("hardwareId", "UNKNOWN"),
+        "userId": user_obj.get("userId", "UNKNOWN")
     }
 
 # Hardware APIS
