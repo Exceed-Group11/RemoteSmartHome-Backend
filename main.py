@@ -163,7 +163,7 @@ def get_remote_structure(remoteId: str):
     return result
 
 
-@app.get("/remote/{remoteId}}/")
+@app.get("/remote/{remoteId}/")
 def get_remote_status_1_by_1(remoteId: str, authorization: Optional[str] = Header(None)):
     try:
         auth_token = header_decoder(authorization)
@@ -175,7 +175,7 @@ def get_remote_status_1_by_1(remoteId: str, authorization: Optional[str] = Heade
         raise HTTPException(401, "Unauthorized access.")
     user_id = user_result[0]["userId"]
     query_user_remote = {
-        "remoteId": remote_id,
+        "remoteId": remoteId,
         "userId": user_id
     }
     query_result = remote_collection.find(query_user_remote, {"_id": 0})
@@ -183,7 +183,7 @@ def get_remote_status_1_by_1(remoteId: str, authorization: Optional[str] = Heade
     # No remote_id in user_id
     if len(list_query_result) == 0:
         raise HTTPException(404, {
-            "message": f"couldn't find Remote {remote_id} "
+            "message": f"couldn't find Remote {remoteId}"
         })
     return list_query_result.pop()
 
