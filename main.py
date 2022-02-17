@@ -278,6 +278,28 @@ def register_user(register: RegisterModel):
         "message": "success"
     }
 
+
+@app.get("/user/")
+def get_user_api(authorization: Optional[str] = Header(None)):
+    # Decode the authorization token from request header
+    try:
+        auth_token = header_decoder(authorization)
+        user_result = remote_smarthome_database.user_session.get_session(
+            {"token": auth_token})
+        if len(user_result) != 1:
+            raise ValueError()
+    except ValueError:
+        raise HTTPException(401, "Unauthorized access.")
+    user_id = user_result[0]["userId"]
+    result = remote_smarthome_database.user.get_user({"userId": user_id})
+    if len(result) != 1:
+        raise HTTPException(
+            404, "No userId associated with this session or found more than 1.")
+    user_obj = result.pop()
+    return {
+        "hardwareId": user_obj.get("hardwareId", "UNKNOWN")
+    }
+
 # Hardware APIS
 
 
