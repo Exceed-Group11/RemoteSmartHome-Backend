@@ -1,11 +1,12 @@
 from models.register_model import RegisterModel
 from models.send_remote_action_model.state_model import StateModel
+from models.signin_model import SignInModel
 from utils.database.remote_smart_home_database import RemoteSmartHomeDatabase
 from utils.header_decoder import header_decoder
 from pymongo import MongoClient
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException, Request, Header
-from typing import Optional
+from typing import Dict, Optional
 import logging
 import hashlib
 import uuid
@@ -280,26 +281,52 @@ def register_user(register: RegisterModel):
 
 
 @app.post("/user/signin/")
-def sign_in(userId: str, token: str):
-    find_userId = user_collection.find({"userID": userId}, {
-                                       "_id": 0, "userId": 1, "username": 0, "password": 0, "hardwareId": 0, "salt": 0})
-    find_pw = user_collection.find({"userID": userId}, {
-                                   "_id": 0, "userId": 0, "username": 0, "password": 1, "hardwareId": 0, "salt": 0})
-    find_salt = user_collection.find({"userID": userId}, {
-                                     "_id": 0, "userId": 0, "username": 0, "password": 0, "hardwareId": 0})
+def sign_in(sign_in: SignInModel):
+    # Get the user requested to sign in.
+    find_user = remote_smarthome_database.user.get_user(
+        {"username": sign_in.username})
+    if len(find_user) != 1:
+        raise HTTPException(401, {
+            "message": "Username or Password is incorrected."
+        })
+    user_from_db: Dict = find_user.pop()
+    # Find if the session is already existed.
+    find_session = remote_smarthome_database.user_session.get_session(
+        {"token": sign_in.token})
+
+    if len(find_session) != 0:
+        session: Dict = find_session.pop()
+        # Check if the found session has the same userId has the one that want to sign in
+        if session["userId"] == user_from_db["userId"]:
+            # If yes, return 200 status code.
+            return {
+                "message": "User already signed in with this session id."
+            }
+        # If not, return 400 status code.
+        raise HTTPException(400, {
+            "message": "Some user is already signed in with this session id."
+        })
+
+    # Generate the hash password with the stored salt.
     check_password = hashlib.pbkdf2_hmac(
-        'sha256', register.password.encode('utf-8'), find_salt, 100000
+        'sha256', sign_in.password.encode(
+            'utf-8'), bytes(user_from_db.get("salt", ""), "utf-8"), 100000
     ).hex()
-    list_user_section = []
-    list_user_section.append(find_userId)
-    list_user_section.append(token)
-    if (check_password == find_pw):
-        print("login success")
-        user_session.insert_one(list_user_section)
-    else:
-        print("wrong password")
+
+    # Check if the generated hash password is the same as the one stored in the database.
+    if (check_password != user_from_db.get("password", "")):
+        raise HTTPException(401, {
+            "message": "Username or Password is incorrected."
+        })
+
+    # Insert the new session.
+    session_data = {
+        "userId": user_from_db["userId"],
+        "token": sign_in.token
+    }
+    user_session.insert_one(session_data)
     return {
-        "message": "command is run"
+        "message": "success"
     }
 
 # Hardware APIS
