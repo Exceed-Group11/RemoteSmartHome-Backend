@@ -245,3 +245,12 @@ def register_user(register: RegisterModel):
     return {
         "message": "success"
     }
+
+@app.post("/user/signin/")
+def sign_in(user=RegisterModel):
+    check = user_collection.find({""})
+    if (hashpassword == user.password) : 
+            print("success")
+    return {
+        "message": "success"
+    }
