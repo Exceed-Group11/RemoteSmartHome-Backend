@@ -258,6 +258,14 @@ def send_remote_action_api(remoteId: str, buttonId: str, state: StateModel, auth
 
 @app.post("/user/register/")
 def register_user(register: RegisterModel):
+    # Check if username is already be used.
+    result = remote_smarthome_database.user.get_user(
+        {"username": register.username})
+    if len(result) != 0:
+        raise HTTPException(400, {
+            "message": f"This username has already been used ({register.username})"
+        })
+
     salt = generate_random_str(16)
     byte_salt = bytes(salt, "utf-8")
     hash_password = hashlib.pbkdf2_hmac(
