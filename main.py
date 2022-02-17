@@ -330,3 +330,22 @@ def send_ack_command_api(command_id: str, authorization: Optional[str] = Header(
     return {
         "message": "success"
     }
+
+@app.get("/remote/")
+def show_all_status(authorization: Optional[str] = Header(None)):
+    try:
+        auth_token = header_decoder(authorization)
+        user_result = remote_smarthome_database.user_session.get_session(
+            {"token": auth_token})
+        if len(user_result) != 1:
+            raise ValueError()
+    except ValueError:
+        raise HTTPException(401, "Unauthorized access.")
+    user_id = user_result[0]["userId"]
+    find = remote_collection.find({"userId": user_id},{"_id":0,})
+    status = []
+    status.append(find)
+    remote_collection.insert_one(status)
+    return {
+        "message":"success"
+    }
