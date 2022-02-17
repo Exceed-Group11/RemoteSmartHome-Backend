@@ -164,7 +164,7 @@ def get_remote_structure(remoteId: str):
     return result
 
 
-@app.post("/remote/{remoteId}/button/{buttonId}")
+@app.post("/remote/{remoteId}/button/{buttonId}/")
 def send_remote_action_api(remoteId: str, buttonId: str, state: StateModel, authorization: Optional[str] = Header(None)):
     # Decode the authorization token from request header
     try:
@@ -259,6 +259,14 @@ def send_remote_action_api(remoteId: str, buttonId: str, state: StateModel, auth
 
 @app.post("/user/register/")
 def register_user(register: RegisterModel):
+    # Check if username is already be used.
+    result = remote_smarthome_database.user.get_user(
+        {"username": register.username})
+    if len(result) != 0:
+        raise HTTPException(400, {
+            "message": f"This username has already been used ({register.username})"
+        })
+
     salt = generate_random_str(16)
     byte_salt = bytes(salt, "utf-8")
     hash_password = hashlib.pbkdf2_hmac(
@@ -327,6 +335,28 @@ def sign_in(sign_in: SignInModel):
     user_session.insert_one(session_data)
     return {
         "message": "success"
+    }
+
+
+@app.get("/user/")
+def get_user_api(authorization: Optional[str] = Header(None)):
+    # Decode the authorization token from request header
+    try:
+        auth_token = header_decoder(authorization)
+        user_result = remote_smarthome_database.user_session.get_session(
+            {"token": auth_token})
+        if len(user_result) != 1:
+            raise ValueError()
+    except ValueError:
+        raise HTTPException(401, "Unauthorized access.")
+    user_id = user_result[0]["userId"]
+    result = remote_smarthome_database.user.get_user({"userId": user_id})
+    if len(result) != 1:
+        raise HTTPException(
+            404, "No userId associated with this session or found more than 1.")
+    user_obj = result.pop()
+    return {
+        "hardwareId": user_obj.get("hardwareId", "UNKNOWN")
     }
 
 # Hardware APIS
