@@ -163,7 +163,7 @@ def get_remote_structure(remoteId: str):
     return result
 
 
-@app.post("/remote/{remoteId}/button/{buttonId}")
+@app.post("/remote/{remoteId}/button/{buttonId}/")
 def send_remote_action_api(remoteId: str, buttonId: str, state: StateModel, authorization: Optional[str] = Header(None)):
     # Decode the authorization token from request header
     try:
