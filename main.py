@@ -278,6 +278,8 @@ def register_user(register: RegisterModel):
         "message": "success"
     }
 
+@app.post()
+
 # Hardware APIS
 
 
@@ -329,4 +331,13 @@ def send_ack_command_api(command_id: str, authorization: Optional[str] = Header(
         {"commandId": command_id})
     return {
         "message": "success"
+    }
+@app.post()
+def sign_in():
+    if ():
+        user_session.insert_one()
+    #else :
+
+    return {
+        "message":"success"
     }
