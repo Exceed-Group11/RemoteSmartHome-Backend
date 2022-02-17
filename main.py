@@ -278,7 +278,25 @@ def register_user(register: RegisterModel):
         "message": "success"
     }
 
-@app.post()
+@app.post("/user/signin/")
+def sign_in(userId:str,token:str):
+    find_userId = user_collection.find({"userID":userId},{"_id":0,"userId":1,"username":0,"password":0,"hardwareId":0,"salt":0})
+    find_pw = user_collection.find({"userID":userId},{"_id":0,"userId":0,"username":0,"password":1,"hardwareId":0,"salt":0})
+    find_salt = user_collection.find({"userID":userId},{"_id":0,"userId":0,"username":0,"password":0,"hardwareId":0})
+    check_password = hashlib.pbkdf2_hmac(
+        'sha256', register.password.encode('utf-8'), find_salt, 100000
+    ).hex()
+    list_user_section = []
+    list_user_section.append(find_userId)
+    list_user_section.append(token)
+    if (check_password == find_pw):
+        print("login success")
+        user_session.insert_one(list_user_section)
+    else:
+        print("wrong password")
+    return {
+        "message":"command is run"
+    }
 
 # Hardware APIS
 
@@ -332,12 +350,5 @@ def send_ack_command_api(command_id: str, authorization: Optional[str] = Header(
     return {
         "message": "success"
     }
-@app.post()
-def sign_in():
-    if ():
-        user_session.insert_one()
-    #else :
 
-    return {
-        "message":"success"
-    }
+
