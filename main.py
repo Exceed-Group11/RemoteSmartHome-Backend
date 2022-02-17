@@ -342,10 +342,10 @@ def show_all_status(authorization: Optional[str] = Header(None)):
     except ValueError:
         raise HTTPException(401, "Unauthorized access.")
     user_id = user_result[0]["userId"]
-    find = remote_collection.find({"userId": user_id},{"_id":0,})
+    find_all = remote_collection.find({"userId": user_id},{"_id":0,})
     status = []
-    status.append(find)
-    remote_collection.insert_one(status)
+    for find in find_all:
+        status.append(find)
     return {
-        "message":"success"
+        "message":status
     }
