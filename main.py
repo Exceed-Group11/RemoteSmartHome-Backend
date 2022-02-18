@@ -74,7 +74,9 @@ def generate_remote(remote_id: str, authorization: Optional[str] = Header(None))
         query_user_remote, {"_id": 0})
     list_user_remoteId = list(user_remoteId)
     if len(list_user_remoteId) != 0:
-        raise HTTPException(400, f"This user already has Remote {remote_id}")
+        raise HTTPException(400, {
+            "message": f"This user already has Remote {remote_id}"
+        })
 
     # Get Default Remote Structure
     remote_structure = remote_smarthome_database.remote_structure.get_remote_structure_from_id(
@@ -82,7 +84,9 @@ def generate_remote(remote_id: str, authorization: Optional[str] = Header(None))
     list_remote_structure = list(remote_structure)
     if len(list_remote_structure) == 0:
         raise HTTPException(
-            400, f"No remote structure with remoteId: {remote_id}")
+            400, {
+                "message": f"No remote structure with remoteId: {remote_id}"
+            })
 
     user_remote = list_remote_structure.pop()
     # Remote the remoteName Key
@@ -97,7 +101,9 @@ def generate_remote(remote_id: str, authorization: Optional[str] = Header(None))
             }
         else:
             raise HTTPException(
-                500, "There was an error occurred while creating the remote. Contact backend team.")
+                500, {
+                    "message": "There was an error occurred while creating the remote. Contact backend team."
+                })
 
     user_remote["structure"] = structure_item
     # Add userId field
