@@ -378,6 +378,27 @@ def sign_in(sign_in: SignInModel):
     }
 
 
+@app.post("/user/signout/")
+def sign_out(authorization: Optional[str] = Header(None)):
+    # Decode the authorization token from request header
+    try:
+        auth_token = header_decoder(authorization)
+        user_result = remote_smarthome_database.user_session.get_session(
+            {"token": auth_token})
+        if len(user_result) != 1:
+            raise ValueError()
+    except ValueError:
+        raise HTTPException(404, {
+            "message": "Session is not found"
+        })
+
+    remote_smarthome_database.user_session.delete_session(
+        {"token": auth_token})
+    return {
+        "message": "success"
+    }
+
+
 @app.get("/user/")
 def get_user_api(authorization: Optional[str] = Header(None)):
     # Decode the authorization token from request header
