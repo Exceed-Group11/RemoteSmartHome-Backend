@@ -1,6 +1,7 @@
 from models.register_model import RegisterModel
 from models.send_remote_action_model.state_model import StateModel
 from models.signin_model import SignInModel
+from utils.check_auth_token import verify_auth_token
 from utils.database.remote_smart_home_database import RemoteSmartHomeDatabase
 from utils.header_decoder import header_decoder
 from pymongo import MongoClient
@@ -64,15 +65,8 @@ def health_api():
 
 @app.post("/remote/{remote_id}/generate/")
 def generate_remote(remote_id: str, authorization: Optional[str] = Header(None)):
-    try:
-        auth_token = header_decoder(authorization)
-        user_result = remote_smarthome_database.user_session.get_session(
-            {"token": auth_token})
-        if len(user_result) != 1:
-            raise ValueError()
-    except ValueError:
-        raise HTTPException(401, "Unauthorized access.")
-    user_id = user_result[0]["userId"]
+    # Get the userId based on the inputted token from header
+    user_id = verify_auth_token(remote_smarthome_database, authorization)
     # Find if user already has this remote.
     query_user_remote = {
         "userId": user_id, "remoteId": remote_id}
@@ -117,16 +111,8 @@ def generate_remote(remote_id: str, authorization: Optional[str] = Header(None))
 
 @app.delete("/remote/{remote_id}/")
 def delete_remote(remote_id: str, authorization: Optional[str] = Header(None)):
-    try:
-        auth_token = header_decoder(authorization)
-        user_result = remote_smarthome_database.user_session.get_session(
-            {"token": auth_token})
-        if len(user_result) != 1:
-            raise ValueError()
-    except ValueError:
-        raise HTTPException(401, "Unauthorized access.")
-
-    user_id = user_result[0]["userId"]
+    # Get the userId based on the inputted token from header
+    user_id = verify_auth_token(remote_smarthome_database, authorization)
     query_user_remote = {
         "remoteId": remote_id,
         "userId": user_id
@@ -166,15 +152,8 @@ def get_remote_structure(remoteId: str):
 
 @app.get("/remote/{remoteId}/")
 def get_remote_status_1_by_1(remoteId: str, authorization: Optional[str] = Header(None)):
-    try:
-        auth_token = header_decoder(authorization)
-        user_result = remote_smarthome_database.user_session.get_session(
-            {"token": auth_token})
-        if len(user_result) != 1:
-            raise ValueError()
-    except ValueError:
-        raise HTTPException(401, "Unauthorized access.")
-    user_id = user_result[0]["userId"]
+    # Get the userId based on the inputted token from header
+    user_id = verify_auth_token(remote_smarthome_database, authorization)
     query_user_remote = {
         "remoteId": remoteId,
         "userId": user_id
@@ -191,38 +170,26 @@ def get_remote_status_1_by_1(remoteId: str, authorization: Optional[str] = Heade
 
 @app.get("/remote/")
 def show_all_status(authorization: Optional[str] = Header(None)):
-    try:
-        auth_token = header_decoder(authorization)
-        user_result = remote_smarthome_database.user_session.get_session(
-            {"token": auth_token})
-        if len(user_result) != 1:
-            raise ValueError()
-    except ValueError:
-        raise HTTPException(401, "Unauthorized access.")
-    user_id = user_result[0]["userId"]
+    # Get the userId based on the inputted token from header
+    user_id = verify_auth_token(remote_smarthome_database, authorization)
     find_all = remote_collection.find({"userId": user_id}, {"_id": 0})
     return list(find_all)
 
 
 @app.post("/remote/{remoteId}/button/{buttonId}/")
 def send_remote_action_api(remoteId: str, buttonId: str, state: StateModel, authorization: Optional[str] = Header(None)):
-    # Decode the authorization token from request header
-    try:
-        auth_token = header_decoder(authorization)
-        user_result = remote_smarthome_database.user_session.get_session(
-            {"token": auth_token})
-        if len(user_result) != 1:
-            raise ValueError()
-    except ValueError:
-        raise HTTPException(401, "Unauthorized access.")
-    # Get User's hardware id
-    user_id = user_result[0]["userId"]
+    # Get the userId based on the inputted token from header
+    user_id = verify_auth_token(remote_smarthome_database, authorization)
+
+    # Get user hardwareId
     user = remote_smarthome_database.user.get_user(
         {"userId": user_id})
     list_user = list(user)
     if len(list_user) != 1:
         raise HTTPException(
-            404, "The userId is not found")
+            404, {
+                "message": "The userId is not found"
+            })
     hardware_id = list_user[0]["hardwareId"]
 
     # Get Remote
@@ -230,24 +197,32 @@ def send_remote_action_api(remoteId: str, buttonId: str, state: StateModel, auth
         {"userId": user_id, "remoteId": remoteId})
     if len(remote_result) != 1:
         raise HTTPException(
-            404, "The remote is not found or found more than 1")
+            404, {
+                "message": "The remote is not found or found more than 1"
+            })
     remote_user = remote_result[0]
 
     # Check if button is exists
     if remote_user["structure"].get(buttonId, "") == "":
         raise HTTPException(
-            404, f"The inputted buttonId ({buttonId}) is not found for the remote {remoteId}")
+            404, {
+                "message": f"The inputted buttonId ({buttonId}) is not found for the remote {remoteId}"
+            })
     # Check if the state in the database is the same thing that use want to interact
     if remote_user["structure"][buttonId]["state"] == state.state:
         raise HTTPException(
-            400, f"The state of the button that you want to change is already {state.state}")
+            400, {
+                "message": f"The state of the button that you want to change is already {state.state}"
+            })
 
     # Get Remote Structure
     remote_structure = remote_smarthome_database.remote_structure.get_remote_structure_from_id(
         remoteId)
     if len(remote_structure) != 1:
         raise HTTPException(
-            404, "The remote structure is not found or found more than 1")
+            404, {
+                "message": "The remote structure is not found or found more than 1"
+            })
 
     # Generate the command_id
     command_id = generate_random_str(10)
@@ -380,17 +355,10 @@ def sign_in(sign_in: SignInModel):
 
 @app.post("/user/signout/")
 def sign_out(authorization: Optional[str] = Header(None)):
-    # Decode the authorization token from request header
-    try:
-        auth_token = header_decoder(authorization)
-        user_result = remote_smarthome_database.user_session.get_session(
-            {"token": auth_token})
-        if len(user_result) != 1:
-            raise ValueError()
-    except ValueError:
-        raise HTTPException(404, {
-            "message": "Session is not found"
-        })
+    # Verify if the session is found
+    verify_auth_token(remote_smarthome_database, authorization)
+    # Get token from header again
+    auth_token = header_decoder(authorization)
 
     remote_smarthome_database.user_session.delete_session(
         {"token": auth_token})
@@ -401,16 +369,8 @@ def sign_out(authorization: Optional[str] = Header(None)):
 
 @app.get("/user/")
 def get_user_api(authorization: Optional[str] = Header(None)):
-    # Decode the authorization token from request header
-    try:
-        auth_token = header_decoder(authorization)
-        user_result = remote_smarthome_database.user_session.get_session(
-            {"token": auth_token})
-        if len(user_result) != 1:
-            raise ValueError()
-    except ValueError:
-        raise HTTPException(401, "Unauthorized access.")
-    user_id = user_result[0]["userId"]
+    # Get the userId based on the inputted token from header
+    user_id = verify_auth_token(remote_smarthome_database, authorization)
     result = remote_smarthome_database.user.get_user({"userId": user_id})
     if len(result) != 1:
         raise HTTPException(
@@ -435,7 +395,9 @@ def get_commands_api(request: Request, authorization: Optional[str] = Header(Non
     try:
         hardware_id = header_decoder(authorization)
     except ValueError:
-        raise HTTPException(401, "Unauthorized access.")
+        raise HTTPException(401, {
+            "message": "Unauthorized access."
+        })
     # Get the command based on the inputted hardware_id
     result = remote_smarthome_database.hardware.get_command(
         {"hardwareId": hardware_id})
@@ -455,7 +417,9 @@ def send_ack_command_api(command_id: str, authorization: Optional[str] = Header(
     try:
         hardware_id = header_decoder(authorization)
     except ValueError:
-        raise HTTPException(401, "Unauthorized access.")
+        raise HTTPException(401, {
+            "message": "Unauthorized access."
+        })
     result = remote_smarthome_database.hardware.get_command(
         {"commandId": command_id, "hardwareId": hardware_id})
     if len(result) == 0:
