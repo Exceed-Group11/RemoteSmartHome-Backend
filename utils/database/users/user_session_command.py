@@ -13,3 +13,7 @@ class UserSessionCommand(DatabaseBase):
         self.logger.debug(f"Get Session {searchObj}: {result}")
         list_result = list(result)
         return list_result
+
+    def delete_session(self, searchObj: Dict) -> None:
+        self.__collection.delete_one(searchObj)
+        self.logger.debug(f"Deleted Session {searchObj}")
