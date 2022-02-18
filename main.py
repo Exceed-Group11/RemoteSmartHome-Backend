@@ -1,3 +1,4 @@
+from models.generate_remote_model import GenerateRemoteModel
 from models.register_model import RegisterModel
 from models.send_remote_action_model.state_model import StateModel
 from models.signin_model import SignInModel
@@ -64,7 +65,7 @@ def health_api():
 
 
 @app.post("/remote/{remote_id}/generate/")
-def generate_remote(remote_id: str, authorization: Optional[str] = Header(None)):
+def generate_remote(remote_id: str, remote_detail: GenerateRemoteModel, authorization: Optional[str] = Header(None)):
     # Get the userId based on the inputted token from header
     user_id = verify_auth_token(remote_smarthome_database, authorization)
     # Find if user already has this remote.
@@ -89,8 +90,6 @@ def generate_remote(remote_id: str, authorization: Optional[str] = Header(None))
             })
 
     user_remote = list_remote_structure.pop()
-    # Remote the remoteName Key
-    del user_remote["remoteName"]
     structure_item = {}
     # Loop each button type
     for key, item in user_remote["structure"].items():
@@ -104,7 +103,9 @@ def generate_remote(remote_id: str, authorization: Optional[str] = Header(None))
                 500, {
                     "message": "There was an error occurred while creating the remote. Contact backend team."
                 })
-
+    # Add remote name
+    user_remote["remoteName"] = remote_detail.remoteName
+    # Set the remote structure
     user_remote["structure"] = structure_item
     # Add userId field
     user_remote["userId"] = user_id
