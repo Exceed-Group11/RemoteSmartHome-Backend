@@ -68,16 +68,6 @@ def health_api():
 def generate_remote(remote_id: str, remote_detail: GenerateRemoteModel, authorization: Optional[str] = Header(None)):
     # Get the userId based on the inputted token from header
     user_id = verify_auth_token(remote_smarthome_database, authorization)
-    # Find if user already has this remote.
-    query_user_remote = {
-        "userId": user_id, "remoteId": remote_id}
-    user_remoteId = remote_collection.find(
-        query_user_remote, {"_id": 0})
-    list_user_remoteId = list(user_remoteId)
-    if len(list_user_remoteId) != 0:
-        raise HTTPException(400, {
-            "message": f"This user already has Remote {remote_id}"
-        })
 
     # Get Default Remote Structure
     remote_structure = remote_smarthome_database.remote_structure.get_remote_structure_from_id(
@@ -109,6 +99,18 @@ def generate_remote(remote_id: str, remote_detail: GenerateRemoteModel, authoriz
     user_remote["structure"] = structure_item
     # Add userId field
     user_remote["userId"] = user_id
+
+    # Find if user already has this remote.
+    query_user_remote = {
+        "userId": user_id, "remoteId": remote_id}
+    user_remoteId = remote_collection.find(
+        query_user_remote, {"_id": 0})
+    list_user_remoteId = list(user_remoteId)
+    if len(list_user_remoteId) != 0:
+        raise HTTPException(400, {
+            "message": f"This user already has Remote {remote_id}"
+        })
+
     # Insert remote into the remote collection
     remote_collection.insert_one(user_remote)
     return {
